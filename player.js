@@ -1,6 +1,6 @@
 // player.js
 
-// Insere o CSS do Plyr e estilos personalizados
+// Insere CSS do Plyr e estilo do widget
 const link = document.createElement("link");
 link.rel = "stylesheet";
 link.href = "https://cdn.plyr.io/3.7.8/plyr.css";
@@ -14,35 +14,16 @@ style.innerHTML = `
   right: 20px;
   background: white;
   border: 1px solid #ccc;
-  padding: 15px 10px;
+  padding: 10px;
   z-index: 9999;
   width: 300px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  border-radius: 10px;
+  border-radius: 8px;
   font-family: sans-serif;
-  text-align: center;
 }
 #audioWidget h4 {
+  margin: 0 0 10px;
   font-size: 16px;
-  margin: 10px 0;
-}
-#audioWidget .logo {
-  width: 100px;
-  margin: 0 auto 10px;
-}
-#audioWidget .footer {
-  font-size: 10px;
-  color: #888;
-  margin-top: 8px;
-}
-#audioWidget #toggleBtn {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  background: transparent;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
 }
 `;
 document.head.appendChild(style);
@@ -51,24 +32,12 @@ document.head.appendChild(style);
 const widget = document.createElement("div");
 widget.id = "audioWidget";
 widget.innerHTML = `
-  <button id="toggleBtn">−</button>
-  <img src="https://drive.google.com/file/d/1yChx4cmdO9rpyhotzJxdD6Ld9zFe1tGm/view?usp=sharing" alt="Logo PluralWeb" class="logo" />
   <h4>🔊 Tour em Áudio</h4>
-  <audio id="accessiblePlayer" controls style="width: 100%;"></audio>
-  <div class="footer">by Plural Web</div>
+  <audio id="accessiblePlayer" controls></audio>
 `;
 document.body.appendChild(widget);
 
-// Minimizar/restaurar o player
-let minimized = false;
-document.getElementById("toggleBtn").addEventListener("click", () => {
-  minimized = !minimized;
-  const content = widget.querySelectorAll("img, h4, audio, .footer");
-  content.forEach(el => el.style.display = minimized ? "none" : "block");
-  document.getElementById("toggleBtn").textContent = minimized ? "+" : "−";
-});
-
-// Carrega Plyr e busca o áudio da API
+// Carrega Plyr e inicia o player
 const script = document.createElement("script");
 script.src = "https://cdn.plyr.io/3.7.8/plyr.polyfilled.js";
 script.onload = async () => {
