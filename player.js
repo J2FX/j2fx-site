@@ -32,6 +32,7 @@ document.head.appendChild(style);
 const widget = document.createElement("div");
 widget.id = "audioWidget";
 widget.innerHTML = `
+  <img src="https://drive.google.com/file/d/1yChx4cmdO9rpyhotzJxdD6Ld9zFe1tGm/view?usp=drive_link">
   <h4>🔊 Tour em Áudio</h4>
   <audio id="accessiblePlayer" controls></audio>
 `;
