@@ -7,9 +7,16 @@
     position: "top-right", // Opções: top-right, top-left, bottom-right, bottom-left
     theme: "light", // Opções: light, dark
     autoplay: false,
+    
+    // Opção 1: Buscar áudio da API (deixe audioUrl vazio para usar esta opção)
     apiKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuaGdxbWZlZ2F3a2piaXdndmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyMTA5MDUsImV4cCI6MjA2MTc4NjkwNX0.SjMbOC1zmsorsx8c9658Mu2MZQOpEQtT5jtNcUdAsl4",
     supabaseUrl: "https://cnhqgmfegawkjbiwgvef.supabase.co/rest/v1/audios",
-    imageUrl: "https://pluralweb-audios.s3.sa-east-1.amazonaws.com/setup/logo-pluralweb.png" // URL da imagem padrão
+    
+    // Opção 2: URL direta do áudio (use esta opção para ignorar a chamada API)
+    audioUrl: "https://example.com/audio/demo.mp3", // Especifique diretamente o URL do áudio aqui
+    
+    // Imagem fixa para o player
+    imageUrl: "https://pluralweb-audios.s3.sa-east-1.amazonaws.com/setup/logo-pluralweb.png"
   };
 
   // Insere CSS do Plyr e estilo do widget
@@ -93,6 +100,12 @@
       margin-bottom: 10px;
       display: block;
     }
+    .loading-message {
+      padding: 10px;
+      text-align: center;
+      font-style: italic;
+      color: #666;
+    }
   `;
   document.head.appendChild(style);
 
@@ -110,7 +123,9 @@
       <div id="audioImageContainer">
         <img id="audioImage" src="${widgetConfig.imageUrl}" alt="Capa do áudio">
       </div>
-      <audio id="accessiblePlayer" controls></audio>
+      <div id="audioPlayerContainer">
+        <div class="loading-message">Carregando áudio...</div>
+      </div>
     </div>
   `;
   
@@ -132,10 +147,31 @@
     }
   });
 
-  // Carrega Plyr e inicia o player
-  const script = document.createElement("script");
-  script.src = "https://cdn.plyr.io/3.7.8/plyr.polyfilled.js";
-  script.onload = async () => {
+  // Função para criar o player de áudio
+  function createAudioPlayer(audioUrl) {
+    const playerContainer = document.getElementById("audioPlayerContainer");
+    playerContainer.innerHTML = `<audio id="accessiblePlayer" controls></audio>`;
+    
+    const audioElement = document.getElementById("accessiblePlayer");
+    audioElement.src = audioUrl;
+    
+    // Inicializar Plyr quando o script estiver carregado
+    if (window.Plyr) {
+      const player = new Plyr("#accessiblePlayer", {
+        controls: ['play', 'progress', 'current-time', 'mute', 'volume']
+      });
+      
+      // Reprodução automática (se configurado)
+      if (widgetConfig.autoplay) {
+        audioElement.play().catch(e => {
+          console.log("Audio: Reprodução automática bloqueada pelo navegador");
+        });
+      }
+    }
+  }
+
+  // Função para buscar áudio do Supabase
+  async function fetchAudioFromSupabase() {
     try {
       // Detectar site e página
       const site = window.location.hostname;
@@ -147,9 +183,15 @@
       const response = await fetch(`${widgetConfig.supabaseUrl}?site=eq.${site}&page=eq.${page}`, {
         headers: {
           "apikey": widgetConfig.apiKey,
-          "Authorization": `Bearer ${widgetConfig.apiKey}`
-        }
+          "Authorization": `Bearer ${widgetConfig.apiKey}`,
+          "Content-Type": "application/json"
+        },
+        method: "GET"
       });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
       const data = await response.json();
       console.log("Audio: Resposta da API:", data);
@@ -157,28 +199,46 @@
       if (data && data.length > 0 && data[0]?.audio_url) {
         const audioUrl = data[0].audio_url;
         console.log("Audio: URL de áudio encontrada:", audioUrl);
-        
-        // Aplicar URL ao player
-        const audioElement = document.getElementById("accessiblePlayer");
-        audioElement.src = audioUrl;
-        
-        // Inicializar Plyr
-        const player = new Plyr("#accessiblePlayer", {
-          controls: ['play', 'progress', 'current-time', 'mute', 'volume']
-        });
-        
-        // Reprodução automática (se configurado)
-        if (widgetConfig.autoplay) {
-          audioElement.play().catch(e => {
-            console.log("Audio: Reprodução automática bloqueada pelo navegador");
-          });
-        }
+        return audioUrl;
       } else {
         console.warn("Audio: Áudio não encontrado para esta página:", site, page);
-        document.getElementById("audioWidget").style.display = "none";
+        return null;
       }
     } catch (error) {
-      console.error("Audio: Erro ao carregar o áudio:", error);
+      console.error("Audio: Erro ao carregar o áudio da API:", error);
+      return null;
+    }
+  }
+
+  // Carrega Plyr e inicia o player
+  const script = document.createElement("script");
+  script.src = "https://cdn.plyr.io/3.7.8/plyr.polyfilled.js";
+  script.onload = async () => {
+    try {
+      let audioUrl;
+      
+      // Se já temos uma URL de áudio configurada, use-a diretamente
+      if (widgetConfig.audioUrl) {
+        audioUrl = widgetConfig.audioUrl;
+      } else {
+        // Caso contrário, tente buscar da API
+        audioUrl = await fetchAudioFromSupabase();
+      }
+      
+      if (audioUrl) {
+        createAudioPlayer(audioUrl);
+      } else {
+        // Se não conseguir obter o áudio, use um áudio de fallback ou esconda o widget
+        const playerContainer = document.getElementById("audioPlayerContainer");
+        playerContainer.innerHTML = `<div class="loading-message">Áudio não disponível para esta página.</div>`;
+        
+        // Opcionalmente, esconda o widget após alguns segundos
+        setTimeout(() => {
+          document.getElementById("audioWidget").style.display = "none";
+        }, 3000);
+      }
+    } catch (error) {
+      console.error("Audio: Erro ao inicializar o player:", error);
       document.getElementById("audioWidget").style.display = "none";
     }
   };
