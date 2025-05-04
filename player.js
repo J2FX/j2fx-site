@@ -1,64 +1,106 @@
-// player.js
-
-// Insere CSS do Plyr e estilo do widget
-const link = document.createElement("link");
-link.rel = "stylesheet";
-link.href = "https://cdn.plyr.io/3.7.8/plyr.css";
-document.head.appendChild(link);
-
-const style = document.createElement("style");
-style.innerHTML = `
-#audioWidget {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-  background: white;
-  border: 1px solid #ccc;
-  padding: 10px;
-  z-index: 9999;
-  width: 300px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-  border-radius: 8px;
-  font-family: sans-serif;
-}
-#audioWidget h4 {
-  margin: 0 0 10px;
-  font-size: 16px;
-}
-`;
-document.head.appendChild(style);
-
-// Cria o widget HTML
-const widget = document.createElement("div");
-widget.id = "audioWidget";
-widget.innerHTML = `
-  <h4>🔊 Tour em Áudio</h4>
-  <audio id="accessiblePlayer" controls></audio>
-`;
-document.body.appendChild(widget);
-
-// Carrega Plyr e inicia o player
-const script = document.createElement("script");
-script.src = "https://cdn.plyr.io/3.7.8/plyr.polyfilled.js";
-script.onload = async () => {
+(async () => {
+  // CONFIGURAÇÃO
+  const supabaseUrl = 'https://cnhqgmfegawkjbiwgvef.supabase.co';
+  const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuaGdxbWZlZ2F3a2piaXdndmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyMTA5MDUsImV4cCI6MjA2MTc4NjkwNX0.SjMbOC1zmsorsx8c9658Mu2MZQOpEQtT5jtNcUdAsl4';
   const site = window.location.hostname;
-  const page = window.location.pathname === "/" ? "home" : window.location.pathname.replace(/\//g, "");
+  const page = window.location.pathname === '/' ? 'home' : window.location.pathname;
 
-  const res = await fetch(`https://cnhqgmfegawkjbiwgvef.supabase.co/rest/v1/audios?site=eq.${site}&page=eq.${page}`, {
-    headers: {
-      "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuaGdxbWZlZ2F3a2piaXdndmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyMTA5MDUsImV4cCI6MjA2MTc4NjkwNX0.SjMbOC1zmsorsx8c9658Mu2MZQOpEQtT5jtNcUdAsl4",
-      "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuaGdxbWZlZ2F3a2piaXdndmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyMTA5MDUsImV4cCI6MjA2MTc4NjkwNX0.SjMbOC1zmsorsx8c9658Mu2MZQOpEQtT5jtNcUdAsl4"
+  // ESTILO
+  const style = document.createElement('style');
+  style.innerHTML = `
+    #plural-widget {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 300px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      font-family: Arial, sans-serif;
+      z-index: 9999;
+      overflow: hidden;
     }
-  });
+    #plural-header {
+      text-align: center;
+      background: #f8f8f8;
+      padding: 10px;
+    }
+    #plural-header img {
+      max-width: 100px;
+      margin: auto;
+      display: block;
+    }
+    #plural-body {
+      padding: 10px;
+      text-align: center;
+    }
+    #plural-footer {
+      text-align: center;
+      font-size: 10px;
+      color: #999;
+      padding: 5px 0;
+    }
+    #plural-toggle {
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      background: none;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+    }
+  `;
+  document.head.appendChild(style);
 
-  const data = await res.json();
-  const audioUrl = data[0]?.audio_url;
-  if (audioUrl) {
-    const player = new Plyr("#accessiblePlayer");
-    document.getElementById("accessiblePlayer").src = audioUrl;
-  } else {
-    console.warn("Áudio não encontrado para esta página.");
-    document.getElementById("audioWidget").style.display = "none";
+  // HTML
+  const widget = document.createElement('div');
+  widget.id = 'plural-widget';
+  widget.innerHTML = `
+    <div id="plural-header">
+      <button id="plural-toggle">−</button>
+      <img src="https://via.placeholder.com/100x40?text=PluralWeb" alt="Plural Web" />
+    </div>
+    <div id="plural-body">
+      <p>Clique para fazer um tour em áudio desta página:</p>
+      <audio id="plural-audio" controls style="width: 100%"></audio>
+    </div>
+    <div id="plural-footer">by Plural Web</div>
+  `;
+  document.body.appendChild(widget);
+
+  // TOGGLE (minimizar/restaurar)
+  const toggleButton = document.getElementById('plural-toggle');
+  const body = document.getElementById('plural-body');
+  toggleButton.onclick = () => {
+    if (body.style.display === 'none') {
+      body.style.display = 'block';
+      toggleButton.textContent = '−';
+    } else {
+      body.style.display = 'none';
+      toggleButton.textContent = '+';
+    }
+  };
+
+  // FETCH do áudio
+  async function fetchAudio() {
+    try {
+      const res = await fetch(`${supabaseUrl}/rest/v1/audios?site=eq.${site}&page=eq.${page}`, {
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+        },
+      });
+      const data = await res.json();
+      if (data.length > 0 && data[0].url) {
+        document.getElementById('plural-audio').src = data[0].url;
+      } else {
+        document.getElementById('plural-body').innerHTML = '<p>Áudio não encontrado para esta página.</p>';
+      }
+    } catch (err) {
+      console.error('Erro ao carregar áudio:', err);
+      document.getElementById('plural-body').innerHTML = '<p>Erro ao carregar o áudio.</p>';
+    }
   }
-};
-document.body.appendChild(script);
+
+  fetchAudio();
+})();
