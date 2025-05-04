@@ -41,7 +41,7 @@ document.body.appendChild(widget);
 const script = document.createElement("script");
 script.src = "https://cdn.plyr.io/3.7.8/plyr.polyfilled.js";
 script.onload = async () => {
-  const site = window.location.origin;
+  const site = window.location.hostname;
   const page = window.location.pathname === "/" ? "home" : window.location.pathname.replace(/\//g, "");
 
   const res = await fetch(`https://cnhqgmfegawkjbiwgvef.supabase.co/rest/v1/audios?site=eq.${site}&page=eq.${page}`, {
