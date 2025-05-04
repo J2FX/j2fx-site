@@ -14,7 +14,7 @@
     
     // Para teste rápido (use uma URL direta de áudio público)
     // Descomente abaixo para testar com um áudio específico
-    testAudioUrl: "https://file-examples.com/storage/feff61b23b8eea4203654a7/2017/11/file_example_MP3_700KB.mp3",
+    testAudioUrl: "https://pluralweb-audios.s3.sa-east-1.amazonaws.com/ML-ESPORTES+250417+005.mp3",
     
     // Logo fixo da PluralWeb
     logoUrl: "https://pluralweb-audios.s3.sa-east-1.amazonaws.com/setup/logo-pluralweb.png"
