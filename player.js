@@ -88,6 +88,7 @@
         headers: {
           apikey: supabaseKey,
           Authorization: `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json'
         },
       });
       const data = await res.json();
