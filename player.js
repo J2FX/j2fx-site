@@ -3,7 +3,7 @@
   const supabaseUrl = 'https://cnhqgmfegawkjbiwgvef.supabase.co';
   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuaGdxbWZlZ2F3a2piaXdndmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyMTA5MDUsImV4cCI6MjA2MTc4NjkwNX0.SjMbOC1zmsorsx8c9658Mu2MZQOpEQtT5jtNcUdAsl4';
   const site = window.location.hostname;
-  const page = window.location.pathname === '/' ? 'home' : window.location.pathname;
+  const page = window.location.pathname === "/" ? "home" : window.location.pathname.replace(/\//g, '');
 
   // ESTILO
   const style = document.createElement('style');
