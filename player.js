@@ -58,7 +58,7 @@
   widget.innerHTML = `
     <div id="plural-header">
       <button id="plural-toggle">−</button>
-      <img src="https://via.placeholder.com/100x40?text=PluralWeb" alt="Plural Web" />
+      <img src="https://pluralweb-audios.s3.sa-east-1.amazonaws.com/setup/logo-pluralweb.png" alt="Plural Web" />
     </div>
     <div id="plural-body">
       <p>Clique para fazer um tour em áudio desta página:</p>
