@@ -14,7 +14,7 @@
     
     // Para teste rápido (use uma URL direta de áudio público)
     // Descomente abaixo para testar com um áudio específico
-    testAudioUrl: "https://pluralweb-audios.s3.sa-east-1.amazonaws.com/clientes/j2fx/LOC+J2FX.mp3",
+    testAudioUrl: "https://pluralweb-audios.s3.sa-east-1.amazonaws.com/clientes/j2fx/acessibilidade/j2fx-all-as.mp3",
     
     // Logo fixo da PluralWeb
     logoUrl: "https://pluralweb-audios.s3.sa-east-1.amazonaws.com/setup/logo-pluralweb.png"
