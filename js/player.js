@@ -1,33 +1,23 @@
 // player.js
 
-(function() {
-  // Configuração - Mude apenas esta seção ao fornecer o widget para clientes
+(function () {
   const widgetConfig = {
     title: "🔊 Tour em Áudio",
-    position: "bottom-right", // Opções: top-right, top-left, bottom-right, bottom-left
-    theme: "light", // Opções: light, dark
+    position: "bottom-right",
+    theme: "light",
     autoplay: false,
-    
-    // Configuração do Supabase
     apiKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuaGdxbWZlZ2F3a2piaXdndmVmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyMTA5MDUsImV4cCI6MjA2MTc4NjkwNX0.SjMbOC1zmsorsx8c9658Mu2MZQOpEQtT5jtNcUdAsl4",
     supabaseUrl: "https://cnhqgmfegawkjbiwgvef.supabase.co/rest/v1/audios",
-    
-    // Para teste rápido (use uma URL direta de áudio público)
-    // Descomente abaixo para testar com um áudio específico
-    // testAudioUrl: "https://pluralweb-audios.s3.sa-east-1.amazonaws.com/clientes/j2fx/acessibilidade/j2fx-all-as.mp3",
-    
-    // Logo fixo da PluralWeb
     logoUrl: "https://pluralweb-audios.s3.sa-east-1.amazonaws.com/setup/logo-pluralweb.png"
   };
 
-  // Insere CSS do widget
   const style = document.createElement("style");
   style.innerHTML = `
     #audioWidget {
       position: fixed;
-      ${widgetConfig.position === "top-right" ? "top: 20px; right: 20px;" : 
-        widgetConfig.position === "top-left" ? "top: 20px; left: 20px;" :
-        widgetConfig.position === "bottom-right" ? "bottom: 20px; right: 20px;" :
+      ${widgetConfig.position === "top-right" ? "top: 20px; right: 20px;" :
+      widgetConfig.position === "top-left" ? "top: 20px; left: 20px;" :
+      widgetConfig.position === "bottom-right" ? "bottom: 20px; right: 20px;" :
         "bottom: 20px; left: 20px;"}
       background: ${widgetConfig.theme === "dark" ? "#333" : "#fff"};
       color: ${widgetConfig.theme === "dark" ? "#fff" : "#333"};
@@ -93,11 +83,8 @@
   `;
   document.head.appendChild(style);
 
-  // Cria o widget HTML
   const widget = document.createElement("div");
   widget.id = "audioWidget";
-  
-  // Conteúdo inicial do widget
   widget.innerHTML = `
     <div id="audioHeader">
       <img id="audioLogo" src="${widgetConfig.logoUrl}" alt="PluralWeb Logo">
@@ -113,16 +100,14 @@
       <div class="debug-info" id="debugInfo"></div>
     </div>
   `;
-  
   document.body.appendChild(widget);
 
-  // Funcionalidade para expandir/colapsar
   const toggleBtn = document.getElementById("audioToggle");
   const content = document.getElementById("audioContent");
   const widgetElement = document.getElementById("audioWidget");
   const titleDiv = document.getElementById("audioTitle");
-  
-  toggleBtn.addEventListener("click", function() {
+
+  toggleBtn.addEventListener("click", function () {
     if (this.innerHTML === "−") {
       this.innerHTML = "+";
       this.setAttribute("aria-label", "Expandir");
@@ -138,11 +123,9 @@
     }
   });
 
-  // Função para atualizar o status
   function updateStatus(message) {
     const container = document.getElementById("playerContainer");
     if (!container) return;
-    
     const statusElement = container.querySelector(".status-message");
     if (statusElement) {
       statusElement.textContent = message;
@@ -154,26 +137,18 @@
     }
   }
 
-  // Função para mostrar informações de debug (útil para troubleshooting)
   function updateDebug(info) {
     const debugElement = document.getElementById("debugInfo");
     if (debugElement) {
-      // Mostrar o elemento de debug quando for atualizado
       debugElement.style.display = "block";
-      
-      // Formatar o objeto como JSON bonito, ou apenas mostrar texto
-      if (typeof info === "object") {
-        debugElement.textContent = JSON.stringify(info, null, 2);
-      } else {
-        debugElement.textContent = info;
-      }
+      debugElement.textContent = typeof info === "object"
+        ? JSON.stringify(info, null, 2)
+        : info;
     }
   }
 
-  // Função para criar o player de áudio HTML nativo (sem Plyr)
   function createSimplePlayer(audioUrl) {
     updateStatus("Carregando áudio...");
-    
     const container = document.getElementById("playerContainer");
     container.innerHTML = `
       <audio id="audioPlayer" controls>
@@ -182,72 +157,33 @@
       </audio>
       <div class="status-message">Clique no play para ouvir</div>
     `;
-    
+
     const audioElement = document.getElementById("audioPlayer");
-    
-    // Monitorar eventos do player para depurar
-    audioElement.addEventListener("loadstart", () => {
-      updateStatus("Iniciando carregamento...");
-      console.log("Audio: Iniciando carregamento");
-    });
-    
-    audioElement.addEventListener("canplay", () => {
-      updateStatus("Áudio pronto para reprodução. Clique no play!");
-      console.log("Audio: Pronto para reprodução");
-    });
-    
-    audioElement.addEventListener("playing", () => {
-      updateStatus("Em reprodução...");
-      console.log("Audio: Em reprodução");
-    });
-    
-    audioElement.addEventListener("error", (e) => {
-      const errorMessages = {
-        1: "Carregamento abortado",
-        2: "Erro de rede",
-        3: "Erro de decodificação",
-        4: "Áudio não suportado"
+
+    audioElement.addEventListener("loadstart", () => updateStatus("Iniciando carregamento..."));
+    audioElement.addEventListener("canplay", () => updateStatus("Áudio pronto para reprodução. Clique no play!"));
+    audioElement.addEventListener("playing", () => updateStatus("Em reprodução..."));
+    audioElement.addEventListener("error", () => {
+      const errors = {
+        1: "Carregamento abortado", 2: "Erro de rede",
+        3: "Erro de decodificação", 4: "Áudio não suportado"
       };
-      
-      const errorCode = audioElement.error ? audioElement.error.code : 0;
-      const errorMessage = errorMessages[errorCode] || "Erro desconhecido";
-      
-      updateStatus(`Erro: ${errorMessage}. Tente novamente.`);
-      updateDebug(`Erro ${errorCode}: ${errorMessage}`);
-      console.error("Audio: Erro ao carregar", audioElement.error);
+      const code = audioElement.error?.code || 0;
+      updateStatus(`Erro: ${errors[code] || "Erro desconhecido"}`);
+      updateDebug(audioElement.error);
     });
-    
-    // Tentar reprodução automática se configurado
+
     if (widgetConfig.autoplay) {
-      audioElement.play().catch(e => {
-        console.log("Audio: Reprodução automática bloqueada pelo navegador");
-        updateStatus("Clique no play para ouvir o áudio");
-      });
+      audioElement.play().catch(() => updateStatus("Clique no play para ouvir o áudio"));
     }
   }
 
-  // Função principal para buscar áudio
-  async function loadAudio() {
+  async function loadAudioForSection(section) {
     try {
-      // *** IMPORTANTE: Para teste rápido, use a URL direta se fornecida ***
-      if (widgetConfig.testAudioUrl) {
-        console.log("Audio: Usando URL de teste direto");
-        createSimplePlayer(widgetConfig.testAudioUrl);
-        return;
-      }
-      
-      // Caso contrário, buscar do Supabase
-      updateStatus("Buscando informações do áudio...");
-      
-      // Detectar site e página atual
+      updateStatus("Buscando áudio...");
       const site = window.location.hostname;
-      const page = window.location.pathname === "/" ? "home" : window.location.pathname.replace(/\//g, "");
-      
-      console.log(`Audio: Buscando áudio para site: ${site}, página: ${page}`);
-      
-      // Requisição para o Supabase
+      const page = section || "home";
       const apiUrl = `${widgetConfig.supabaseUrl}?site=eq.${encodeURIComponent(site)}&page=eq.${encodeURIComponent(page)}`;
-      
       const response = await fetch(apiUrl, {
         method: "GET",
         headers: {
@@ -257,38 +193,50 @@
           "Accept": "application/json"
         }
       });
-      
-      // Verificar resposta HTTP
-      if (!response.ok) {
-        throw new Error(`Erro HTTP: ${response.status}`);
-      }
-      
-      // Parsear dados da resposta
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      console.log("Audio: Resposta da API:", data);
-      
-      // Verificar se temos dados de áudio
-      if (data && data.length > 0 && data[0].audio_url) {
-        const audioUrl = data[0].audio_url;
-        console.log("Audio: URL encontrada:", audioUrl);
-        
-        // Criar o player com a URL encontrada
-        createSimplePlayer(audioUrl);
+      if (data.length > 0 && data[0].audio_url) {
+        createSimplePlayer(data[0].audio_url);
       } else {
-        updateStatus("Nenhum áudio disponível para esta página");
-        console.warn("Audio: Nenhum áudio encontrado para", site, page);
+        updateStatus("Nenhum áudio disponível para esta seção");
       }
     } catch (error) {
-      console.error("Audio: Erro ao carregar", error);
       updateStatus("Erro ao carregar áudio");
       updateDebug(error.toString());
     }
   }
 
-  // Iniciar o carregamento do áudio quando o documento estiver pronto
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", loadAudio);
-  } else {
-    loadAudio();
+  // Detectar seção visível
+  let currentSection = "";
+
+  function getSectionInView() {
+    const sections = document.querySelectorAll("section[id]");
+    const scrollY = window.scrollY;
+    let sectionId = "home";
+    sections.forEach(section => {
+      const offset = section.offsetTop;
+      const height = section.offsetHeight;
+      if (scrollY >= offset - height / 2 && scrollY < offset + height / 2) {
+        sectionId = section.id;
+      }
+    });
+    return sectionId;
   }
+
+  function handleSectionChange() {
+    const newSection = getSectionInView();
+    if (newSection !== currentSection) {
+      currentSection = newSection;
+      loadAudioForSection(currentSection);
+    }
+  }
+
+  window.addEventListener("scroll", () => {
+    setTimeout(handleSectionChange, 150);
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    currentSection = getSectionInView();
+    loadAudioForSection(currentSection);
+  });
 })();
